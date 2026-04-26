@@ -1325,9 +1325,10 @@ const a=JSON.parse(document.getElementById("wp-emoji-settings").textContent),o=(
 
 		function initFaqAccordion(widgetId) {
 			var widget = document.querySelector('.elementor-widget-accordion[data-id="' + widgetId + '"]');
-			if (!widget) {
+			if (!widget || widget.dataset.customAccordionBound === "true") {
 				return;
 			}
+			widget.dataset.customAccordionBound = "true";
 
 			var items = Array.from(widget.querySelectorAll(".elementor-accordion-item"));
 			if (!items.length) {
@@ -1344,30 +1345,38 @@ const a=JSON.parse(document.getElementById("wp-emoji-settings").textContent),o=(
 						return;
 					}
 
+					item.classList.toggle("elementor-active", isActive);
 					title.classList.toggle("elementor-active", isActive);
 					content.classList.toggle("elementor-active", isActive);
 					title.setAttribute("aria-expanded", isActive ? "true" : "false");
 					content.hidden = !isActive;
+					content.style.display = isActive ? "block" : "none";
 				});
 			}
 
 			items.forEach(function (item, index) {
 				var title = item.querySelector(".elementor-tab-title");
-				var link = item.querySelector(".elementor-accordion-title");
+				var content = item.querySelector(".elementor-tab-content");
 
-				if (!title) {
+				if (!title || !content) {
 					return;
 				}
 
 				function onOpen(event) {
 					event.preventDefault();
+					event.stopPropagation();
+					if (typeof event.stopImmediatePropagation === "function") {
+						event.stopImmediatePropagation();
+					}
 					setActive(index);
 				}
 
-				title.addEventListener("click", onOpen);
-				if (link) {
-					link.addEventListener("click", onOpen);
-				}
+				title.addEventListener("click", onOpen, true);
+				title.addEventListener("keydown", function (event) {
+					if (event.key === "Enter" || event.key === " ") {
+						onOpen(event);
+					}
+				});
 			});
 
 			setActive(0);
